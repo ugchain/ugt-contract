@@ -31,10 +31,74 @@ contract UGToken is StandardToken {
     uint256 public allocateStartBlock; // The start block number that starts to allocate token to users.
     uint256 public allocateEndBlock; // The end block nubmer that allocate token to users, lasted for a week.
 
+    // The nonce for avoid transfer replay attacks
+    mapping(address => uint256) nonces;
+
     function UGToken() {
         founder = msg.sender;
-        allocateStartBlock = block.number;
-        allocateEndBlock = allocateStartBlock + 40320; // Last for one week
+        balances[founder] = 100000000 * 10 ** 18;
+    }
+
+    /*
+     * Proxy transfer ug token
+     * @param _from
+     * @param _to
+     * @param _value
+     * @param feeUgt
+     * @param _v
+     * @param _r
+     * @param _s
+     */
+    function transferProxy(address _from, address _to, uint256 _value, uint256 _feeUgt,
+        uint8 _v,bytes32 _r, bytes32 _s) returns (bool){
+
+        if(balances[_from] < _feeUgt + _value) throw;
+
+        uint256 nonce = nonces[_from];
+        bytes32 h = sha3(_from,_to,_value,_feeUgt,nonce);
+        if(_from == ecrecover(h,_v,_r,_s)) throw;
+
+        if(balances[_to] + _value < balances[_to]
+            || balances[msg.sender] + _feeUgt < balances[msg.sender]) throw;
+        balances[_to] += _value;
+        Transfer(_from, _to, _value);
+
+        balances[msg.sender] += _feeUgt;
+        Transfer(_from, msg.sender, _feeUgt);
+
+        balances[_from] -= _value + _feeUgt;
+        nonces[_from] = nonce + 1;
+        return true;
+    }
+
+    /*
+     * Proxy approve
+     * @param _from The  address which should tranfer ugt to others
+     * @param _spender The spender who allowed by _from
+     * @param _value The value that should be tranfered.
+     * @param _v
+     * @param _r
+     * @param _s
+     */
+    function approveProxy(address _from, address _spender, uint256 _value,
+        uint8 _v,bytes32 _r, bytes32 _s) returns (bool success) {
+
+        uint256 nonce = nonces[_from];
+        bytes32 hash = sha3(_from,_spender,_value,nonce);
+        if(_from != ecrecover(hash,_v,_r,_s)) throw;
+        allowed[_from][_spender] = _value;
+        Approval(_from, _spender, _value);
+        nonces[_from] = nonce + 1;
+        return true;
+    }
+
+
+    /*
+     * Get the nonce
+     * @param _addr
+     */
+    function getNonce(address _addr) constant returns (uint256){
+        return nonces[_addr];
     }
 
     /* Approves and then calls the receiving contract */
