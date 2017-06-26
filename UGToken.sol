@@ -36,7 +36,8 @@ contract UGToken is StandardToken {
 
     function UGToken() {
         founder = msg.sender;
-        balances[founder] = 100000000 * 10 ** 18;
+        allocateStartBlock = block.number;
+        allocateEndBlock = allocateStartBlock + 5082; // about one day
     }
 
     /*
