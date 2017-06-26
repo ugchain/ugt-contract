@@ -56,7 +56,7 @@ contract UGToken is StandardToken {
 
         uint256 nonce = nonces[_from];
         bytes32 h = sha3(_from,_to,_value,_feeUgt,nonce);
-        if(_from == ecrecover(h,_v,_r,_s)) throw;
+        if(_from != ecrecover(h,_v,_r,_s)) throw;
 
         if(balances[_to] + _value < balances[_to]
             || balances[msg.sender] + _feeUgt < balances[msg.sender]) throw;
