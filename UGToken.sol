@@ -40,7 +40,8 @@ contract UGToken is StandardToken {
     }
 
     /*
-     * Proxy transfer ug token
+     * Proxy transfer ug token. When some users of the ethereum account has no ether,
+     * he or she can authorize the agent for broadcast transactions, and agents may charge agency fees
      * @param _from
      * @param _to
      * @param _value
@@ -72,7 +73,8 @@ contract UGToken is StandardToken {
     }
 
     /*
-     * Proxy approve
+     * Proxy approve that some one can authorize the agent for broadcast transaction
+     * which call approve method, and agents may charge agency fees
      * @param _from The  address which should tranfer ugt to others
      * @param _spender The spender who allowed by _from
      * @param _value The value that should be tranfered.
